@@ -3,6 +3,7 @@
 # Colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
+YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${GREEN}Setting up F3 Nation Data Management UI...${NC}"
@@ -13,10 +14,36 @@ if ! command -v python3.12 &> /dev/null; then
     exit 1
 fi
 
+# Function to test if poetry is working
+test_poetry() {
+    poetry --version &> /dev/null
+}
+
 # Install poetry if not present
 if ! command -v poetry &> /dev/null; then
     echo -e "${GREEN}Installing Poetry...${NC}"
     curl -sSL https://install.python-poetry.org | python3 -
+    
+    # Add Poetry to PATH if needed
+    if ! test_poetry; then
+        echo -e "${YELLOW}Configuring Poetry PATH...${NC}"
+        POETRY_PATH_LINE='export PATH="$HOME/.local/bin:$PATH"'
+        
+        # Only add to .zshrc if the line doesn't exist
+        if ! grep -q "$POETRY_PATH_LINE" ~/.zshrc; then
+            echo "$POETRY_PATH_LINE" >> ~/.zshrc
+        fi
+        
+        # Update current session's PATH
+        export PATH="$HOME/.local/bin:$PATH"
+        
+        if ! test_poetry; then
+            echo -e "${RED}Poetry installation failed. Please try running the following commands manually:${NC}"
+            echo -e "1. ${YELLOW}export PATH=\"\$HOME/.local/bin:\$PATH\"${NC}"
+            echo -e "2. ${YELLOW}source ~/.zshrc${NC}"
+            exit 1
+        fi
+    fi
 fi
 
 # Clean up any existing database
